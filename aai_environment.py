@@ -20,6 +20,11 @@ class AAIEnvironment(object):
         # Create environment
         self.env = rodentia.Environment(
             width=width, height=height, bg_color=[0.19, 0.3, 0.47])
+        # Set light direction
+        self.env.set_light(dir=[0.5, -1.0, -0.5],
+                           color=[1.0, 1.0, 1.0],
+                           ambient_color=[0.4, 0.4, 0.4],
+                           shadow_rate=0.2)
         
         # Prepare default stage objects (wall, floor)
         self._prepare_stage()
@@ -117,28 +122,6 @@ class AAIEnvironment(object):
             rot=0.0,
             detect_collision=False,
             visible=False)
-
-    """
-    def _prepare_arena():
-        # Add ramp and cylindar
-        ramp_model_path = self.data_path + "ramp0.obj"
-        self.env.add_model(path=ramp_model_path,
-                           scale=[2.0, 1.0, 2.0],
-                           pos=[15.0, 0.0, -2.0],
-                           rot=0.0,
-                           mass=0.0,
-                           detect_collision=False,
-                           use_mesh_collision=True)
-
-        cylinder_model_path = self.data_path + "cylinder0.obj"
-        self.env.add_model(path=cylinder_model_path,
-                           scale=[3.0, 3.0, 7.0],
-                           pos=[15.0, 0.0, 12.0],
-                           rot=0.0,
-                           mass=0.0,
-                           detect_collision=False,
-                           use_mesh_collision=True)
-    """
 
     def _locate_good_goal_obj(self, pos, size):
         texture_path = self.data_path + "green.png"
