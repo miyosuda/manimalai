@@ -15,7 +15,7 @@ class Display(object):
         self.env = AAIEnvironment(256, 256, config_path)
         
         pygame.init()
-
+        
         #self.surface = pygame.display.set_mode(display_size, 0, 24)
         self.surface = pygame.display.set_mode(display_size, 0, 32)
         pygame.display.set_caption('mini-animalai')
@@ -79,7 +79,10 @@ def main():
     #config_path = "./configurations/2-1-1.yml" # wall
     #config_path = "./configurations/3-16-1.yml" # ramp
     #config_path = "./configurations/3-28-1.yml" # maze
-    config_path = "./configurations/3-15-1.yml"
+    #config_path = "./configurations/3-15-1.yml" # tunnel
+    #config_path = "./configurations/10-1-1.yml" # death zone
+    #config_path = "./configurations/1-18-1.yml" # GoodGoalBounce
+    config_path = "./configurations/10-11-1.yml" # LObject
     
     display_size = (512, 256)
     display = Display(display_size, config_path)

@@ -6,6 +6,10 @@ import numpy as np
 
 from envs.arena_config import ArenaConfig
 
+LU_TYPE_L  = 1
+LU_TYPE_L2 = 2
+LU_TYPE_U  = 3
+
 
 class AAIEnvironment(object):
     def __init__(self, width, height, config_path, arena_index=0):
@@ -182,7 +186,70 @@ class AAIEnvironment(object):
                                     rot=0.0,
                                     mass=0.0,
                                     detect_collision=False,
-                                    use_mesh_collision=True)        
+                                    use_mesh_collision=True)
+
+    def _locate_zone_obj(self, pos, rot, size, death):
+        pos = [pos.x-20, pos.y+0.01, -pos.z+20]
+        rot = 2.0 * math.pi * -rot / 360.0
+        half_extent = [size.x*0.5, 0.01, size.z*0.5]
+
+        if death:
+            texture_path = self.data_path + "red.png"
+        else:
+            # TODO:
+            texture_path = self.data_path + "white.png"
+        
+        obj_id = self.env.add_box(
+            texture_path=texture_path,
+            half_extent=half_extent,
+            pos=pos,
+            rot=rot,
+            mass=0.0,
+            detect_collision=True)
+
+    def _locate_cardbox_obj(self, pos, rot, size, light):
+        pos = [pos.x-20, pos.y + size.y*0.5, -pos.z+20]
+        half_extent = [size.x*0.5, size.y*0.5, size.z*0.5]
+        rot = 2.0 * math.pi * -rot / 360.0
+        
+        if light:        
+            mass = 1.0
+        else:
+            mass = 2.0
+        
+        texture_path = self.data_path + "white.png"
+        
+        obj_id = self.env.add_box(
+            texture_path=texture_path,
+            half_extent=half_extent,
+            pos=pos,
+            rot=rot,
+            mass=mass,
+            detect_collision=False)
+
+    def _locate_luobject_obj(self, pos, rot, size, lu_type):
+        # TODO:
+        pos = [pos.x-20, pos.y + size.y*0.5, -pos.z+20]
+        rot = 2.0 * math.pi * -rot / 360.0
+        scale = [size.x*0.2,
+                 size.y*0.2 * 10.0,
+                 size.z*0.2]
+        
+        if lu_type == LU_TYPE_L:
+            model_path = self.data_path + "lobject.obj"
+        elif lu_type == LU_TYPE_L2:
+            model_path = self.data_path + "lobject2.obj"
+        elif lu_type == LU_TYPE_U:
+            model_path = self.data_path + "uobject.obj"
+            
+        mass = 1.0
+        obj_id = self.env.add_model(path=model_path,
+                                    scale=scale,
+                                    pos=pos,
+                                    rot=0.0,
+                                    mass=mass,
+                                    detect_collision=False,
+                                    use_mesh_collision=True)
 
     def _reset_sub(self):
         # First clear remaining reward objects
@@ -214,12 +281,42 @@ class AAIEnvironment(object):
                     color = item.colors[i]
                     size = item.sizes[i]
                     self._locate_ramp_obj(pos, rot, color, size)
-            elif item.name == "CylinderTunnelTransparent" or item.name == "CylinderTunnel":
+            elif item.name == "CylinderTunnelTransparent" or \
+                 item.name == "CylinderTunnel":
                 for i in range(len(item.positions)):
                     pos = item.positions[i]
                     rot = item.rotations[i]
                     size = item.sizes[i]
                     self._locate_cylinder_obj(pos, rot, size)
+            elif item.name == "DeathZone" or item.name == "HotZone":
+                for i in range(len(item.positions)):
+                    pos = item.positions[i]
+                    rot = item.rotations[i]
+                    size = item.sizes[i]
+                    self._locate_zone_obj(pos, rot, size,
+                                          death=item.name=="DeathZone")
+            elif item.name == "Cardbox1" or item.name == "Cardbox2":
+                for i in range(len(item.positions)):
+                    pos = item.positions[i]
+                    rot = item.rotations[i]
+                    size = item.sizes[i]
+                    self._locate_cardbox_obj(pos, rot, size,
+                                             light=item.name=="Cardbox1")
+            elif item.name == "LObject" or \
+                 item.name == "LObject2" or \
+                 item.name == "UObject":
+                 
+                for i in range(len(item.positions)):
+                    pos = item.positions[i]
+                    rot = item.rotations[i]
+                    size = item.sizes[i]
+                    if item.name == "LObject":
+                        lu_type = LU_TYPE_L
+                    elif item.name == "LObject2":
+                        lu_type = LU_TYPE_L2
+                    elif item.name == "UObject":
+                        lu_type = LU_TYPE_U
+                    self._locate_luobject_obj(pos, rot, size, lu_type)
                 
         # Reset environment and get screen
         obs = self.env.step(action=[0, 0, 0])
@@ -250,6 +347,7 @@ class AAIEnvironment(object):
 
         # Check collision
         reward = 0
+        """
         if len(collided) != 0:
             for id in collided:
                 if id in self.plus_obj_ids_set:
@@ -260,6 +358,7 @@ class AAIEnvironment(object):
                     self.minus_obj_ids_set.remove(id)
                 # Remove reward object from environment
                 self.env.remove_obj(id)
+        """
 
         # Check if all positive rewards are taken
         is_empty = len(self.plus_obj_ids_set) == 0
