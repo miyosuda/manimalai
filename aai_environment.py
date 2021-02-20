@@ -31,12 +31,10 @@ class AAIEnvironment(object):
                            shadow_rate=0.2)
         
         # Prepare default stage objects (wall, floor)
-        self._prepare_stage()
-        
-        # Object id for collision checking
-        # TODO:
-        self.plus_obj_ids_set = set()
-        self.minus_obj_ids_set = set()
+        self._prepare_fixed_stage()
+
+        # Non fixed stage obj ids
+        self.stage_obj_ids = []        
         
         # Add additional camera for top view rendering
         self.additional_camera_id = self.env.add_camera_view(256, 256,
@@ -48,7 +46,7 @@ class AAIEnvironment(object):
         # Reset stage
         self.reset()
         
-    def _prepare_stage(self):
+    def _prepare_fixed_stage(self):
         # Floor
         floor_texture_path = self.data_path + "floor0.png"
         
@@ -127,12 +125,18 @@ class AAIEnvironment(object):
             detect_collision=False,
             visible=False)
 
-    def _locate_good_goal_obj(self, pos, size):
-        texture_path = self.data_path + "green.png"
+    def _locate_goal_obj(self, pos, size, rot, good, bounce, multi):
+        if good:
+            if multi:
+                texture_path = self.data_path + "yellow.png"
+            else:
+                texture_path = self.data_path + "green.png"
+        else:
+            texture_path = self.data_path + "red.png"
+        
         radius = size.x * 0.5
         pos = [pos.x-20, radius, -pos.z+20]
         
-        # If the object's mass is not 0, the it is simulated as a rigid body object.
         ball_mass = 0.5
         obj_id = self.env.add_sphere(
             texture_path=texture_path,
@@ -141,7 +145,14 @@ class AAIEnvironment(object):
             rot=0.0,
             mass=ball_mass,
             detect_collision=True)
-        self.plus_obj_ids_set.add(obj_id)
+        # TODO: bounceの対応
+        
+        # TODO: Goaldのサイズ毎に報酬の値を変えるか?
+        if good:
+            self.reward_table[obj_id] = 1
+        if not multi:
+            self.terminate_obj_ids.add(obj_id)
+        self.stage_obj_ids.append(obj_id)
 
     def _locate_wall_obj(self, pos, rot, color, size):
         pos = [pos.x-20, pos.y + size.y*0.5, -pos.z+20]
@@ -149,8 +160,6 @@ class AAIEnvironment(object):
         half_extent = [size.x*0.5, size.y*0.5, size.z*0.5]
         rot = 2.0 * math.pi * -rot / 360.0
         
-        # TODO: obj_idは保存していない
-        # TODO: resetまわりをどうするか決める必要あり
         obj_id = self.env.add_box(
             texture_path=texture_path,
             half_extent=half_extent,
@@ -158,6 +167,7 @@ class AAIEnvironment(object):
             rot=rot,
             mass=0.0,
             detect_collision=False)
+        self.stage_obj_ids.append(obj_id)
 
     def _locate_ramp_obj(self, pos, rot, color, size):
         # TODO: 本当はmodelの中心をfbxに合わせるべき
@@ -173,6 +183,7 @@ class AAIEnvironment(object):
                                     mass=0.0,
                                     detect_collision=False,
                                     use_mesh_collision=True)
+        self.stage_obj_ids.append(obj_id)
 
     def _locate_cylinder_obj(self, pos, rot, size):
         pos = [pos.x-20, pos.y, -pos.z+20]
@@ -187,6 +198,7 @@ class AAIEnvironment(object):
                                     mass=0.0,
                                     detect_collision=False,
                                     use_mesh_collision=True)
+        self.stage_obj_ids.append(obj_id)
 
     def _locate_zone_obj(self, pos, rot, size, death):
         pos = [pos.x-20, pos.y+0.01, -pos.z+20]
@@ -206,6 +218,11 @@ class AAIEnvironment(object):
             rot=rot,
             mass=0.0,
             detect_collision=True)
+        self.stage_obj_ids.append(obj_id)
+        if not death:
+            self.hot_zone_obj_ids.add(obj_id)
+        else:
+            self.terminate_obj_ids(obj_id)
 
     def _locate_cardbox_obj(self, pos, rot, size, light):
         pos = [pos.x-20, pos.y + size.y*0.5, -pos.z+20]
@@ -226,6 +243,7 @@ class AAIEnvironment(object):
             rot=rot,
             mass=mass,
             detect_collision=False)
+        self.stage_obj_ids.append(obj_id)
 
     def _locate_luobject_obj(self, pos, rot, size, lu_type):
         # TODO:
@@ -250,6 +268,7 @@ class AAIEnvironment(object):
                                     mass=mass,
                                     detect_collision=False,
                                     use_mesh_collision=True)
+        self.stage_obj_ids.append(obj_id)
 
     def _reset_sub(self):
         # First clear remaining reward objects
@@ -262,11 +281,38 @@ class AAIEnvironment(object):
                 rot = 2.0 * math.pi * -rot / 360.0
                 # TODO: 本当はagenty=0.5の位置になる
                 self.env.locate_agent(pos=[pos.x-20, pos.y+1, -pos.z+20], rot_y=rot)
-            elif item.name == "GoodGoal":
+
+            elif item.name == "GoodGoal" or \
+                 item.name == "GoodGoalBounce" or \
+                 item.name == "BadGoal" or \
+                 item.name == "BadGoalBounce" or \
+                 item.name == "GoodGoalMulti" or \
+                 item.name == "GoodGoalMultiBounce":
+                name = item.name
+
+                if "Good" in name:
+                    good = True
+                else:
+                    good = False
+                    
+                if "Bounce" in name:
+                    bounce = True
+                else:
+                    bounce = False
+
+                if "Mutli" in name:
+                    multi = True
+                else:
+                    multi = False
+            
                 for i in range(len(item.positions)):
                     pos = item.positions[i]
                     size = item.sizes[i]
-                    self._locate_good_goal_obj(pos, size)
+                    if bounce:
+                        rot = item.rotations[i]
+                    else:
+                        rot = None
+                    self._locate_goal_obj(pos, size, rot, good, bounce, multi)
             elif item.name == "Wall":
                 for i in range(len(item.positions)):
                     pos = item.positions[i]
@@ -328,14 +374,18 @@ class AAIEnvironment(object):
         return self._reset_sub()
 
     def _clear_objects(self):
-        # Create reward objects
-        for id in self.plus_obj_ids_set:
-            self.env.remove_obj(id)
-        for id in self.minus_obj_ids_set:
+        # Remove object from the environment
+        for id in self.stage_obj_ids:
             self.env.remove_obj(id)
 
-        self.plus_obj_ids_set = set()
-        self.minus_obj_ids_set = set()
+        self.stage_obj_ids = []
+        self.reward_table = {}
+        self.terminate_obj_ids = set()
+        self.hot_zone_obj_ids = set()   
+
+    def _calc_hotzone_damage(self):
+        # TODO: 時間に応じたダメージの計算
+        return 1e-5
         
     def step(self, real_action):
         # TODO: actionの整理
@@ -347,33 +397,33 @@ class AAIEnvironment(object):
 
         # Check collision
         reward = 0
-        """
+        terminal = False
+        
         if len(collided) != 0:
             for id in collided:
-                if id in self.plus_obj_ids_set:
-                    reward += 1
-                    self.plus_obj_ids_set.remove(id)
-                elif id in self.minus_obj_ids_set:
-                    reward -= 1
-                    self.minus_obj_ids_set.remove(id)
-                # Remove reward object from environment
-                self.env.remove_obj(id)
-        """
+                if id in self.reward_table:
+                    reward += self.reward_table[id]
+                    # Remove from reward table
+                    del self.reward_table[id]
+                    # Remove from stage object ids
+                    self.stage_obj_ids.remove(id)
+                    # Remove object from the environment
+                    self.env.remove_obj(id)
+                    
+                if id in self.hot_zone_obj_ids:
+                    reward -= self._calc_hotzone_damage()
+                if id in self.terminate_obj_ids:
+                    terminal = True
 
-        # Check if all positive rewards are taken
-        is_empty = len(self.plus_obj_ids_set) == 0
-
-        # Episode ends when step size exceeds MAX_STEP_NUM
-        # TODO: now specifying longer time.
-        terminal = self.step_num >= self.arena.t
-        
-        """
-        # TODO:
-        if (not terminal) and is_empty:
+        if not terminal and self.step_num >= self.arena.t:
+            # Time out
+            terminal = True
+            
+        if terminal:
             screen = self._reset_sub()
-        """
         
         return screen, reward, terminal
+    
 
     def get_top_view(self):
         # Capture stage image from the top view

@@ -82,7 +82,11 @@ def main():
     #config_path = "./configurations/3-15-1.yml" # tunnel
     #config_path = "./configurations/10-1-1.yml" # death zone
     #config_path = "./configurations/1-18-1.yml" # GoodGoalBounce
-    config_path = "./configurations/10-11-1.yml" # LObject
+    #config_path = "./configurations/10-11-1.yml" # LObject, UObject
+    #config_path = "./configurations/10-12-1.yml" # L2Object
+    #config_path = "./configurations/10-13-1.yml"
+    #config_path = "./configurations/10-13-3.yml"
+    config_path = "./debug_configurations/debug0.yml"
     
     display_size = (512, 256)
     display = Display(display_size, config_path)
