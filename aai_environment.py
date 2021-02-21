@@ -23,7 +23,12 @@ class AAIEnvironment(object):
         
         # Create environment
         self.env = rodentia.Environment(
-            width=width, height=height, bg_color=[0.19, 0.3, 0.47])
+            width=width,
+            height=height,
+            bg_color=[0.19, 0.3, 0.47],
+            shadow_buffer_width=1024,
+            agent_radius=0.5)
+        
         # Set light direction
         self.env.set_light(dir=[0.5, -1.0, -0.5],
                            color=[1.0, 1.0, 1.0],
@@ -34,7 +39,7 @@ class AAIEnvironment(object):
         self._prepare_fixed_stage()
 
         # Non fixed stage obj ids
-        self.stage_obj_ids = []        
+        self.stage_obj_ids = []
         
         # Add additional camera for top view rendering
         self.additional_camera_id = self.env.add_camera_view(256, 256,
@@ -136,6 +141,13 @@ class AAIEnvironment(object):
         
         radius = size.x * 0.5
         pos = [pos.x-20, radius, -pos.z+20]
+
+        impulse = None
+        if rot is not None and bounce:
+            IMPULSE_MAGNITUDE = 10.0
+            impulse = [IMPULSE_MAGNITUDE * np.sin(rot),
+                       0,
+                       IMPULSE_MAGNITUDE * np.cos(rot)]
         
         ball_mass = 0.5
         obj_id = self.env.add_sphere(
@@ -145,7 +157,9 @@ class AAIEnvironment(object):
             rot=0.0,
             mass=ball_mass,
             detect_collision=True)
-        # TODO: bounceの対応
+
+        if impulse is not None:
+            self.env.apply_impulse(obj_id, impulse)
         
         # TODO: Goaldのサイズ毎に報酬の値を変えるか?
         if good:
@@ -156,12 +170,12 @@ class AAIEnvironment(object):
 
     def _locate_wall_obj(self, pos, rot, color, size):
         pos = [pos.x-20, pos.y + size.y*0.5, -pos.z+20]
-        texture_path = self.data_path + "white.png"
+        color = [color.r/255.0, color.g/255.0, color.b/255.0]
         half_extent = [size.x*0.5, size.y*0.5, size.z*0.5]
         rot = 2.0 * math.pi * -rot / 360.0
         
         obj_id = self.env.add_box(
-            texture_path=texture_path,
+            color=color,
             half_extent=half_extent,
             pos=pos,
             rot=rot,
@@ -171,8 +185,9 @@ class AAIEnvironment(object):
 
     def _locate_ramp_obj(self, pos, rot, color, size):
         # TODO: 本当はmodelの中心をfbxに合わせるべき
-        pos = [pos.x-20, pos.y, -pos.z+20]
+        pos = [pos.x-20, pos.y, -pos.z+20]        
         rot = 2.0 * math.pi * -rot / 360.0
+        color = [color.r/255.0, color.g/255.0, color.b/255.0]
         scale = [size.x*0.5, size.y*0.5, size.z*0.5]
         
         model_path = self.data_path + "ramp0.obj"
@@ -181,6 +196,7 @@ class AAIEnvironment(object):
                                     pos=pos,
                                     rot=0.0,
                                     mass=0.0,
+                                    color=color,
                                     detect_collision=False,
                                     use_mesh_collision=True)
         self.stage_obj_ids.append(obj_id)
@@ -222,36 +238,39 @@ class AAIEnvironment(object):
         if not death:
             self.hot_zone_obj_ids.add(obj_id)
         else:
-            self.terminate_obj_ids(obj_id)
+            self.terminate_obj_ids.add(obj_id)
 
     def _locate_cardbox_obj(self, pos, rot, size, light):
         pos = [pos.x-20, pos.y + size.y*0.5, -pos.z+20]
-        half_extent = [size.x*0.5, size.y*0.5, size.z*0.5]
+        scale = [size.x*0.5,
+                 size.y*0.5,
+                 size.z*0.5]
         rot = 2.0 * math.pi * -rot / 360.0
         
-        if light:        
+        if light:
             mass = 1.0
+            model_path = self.data_path + "cardbox1.obj"
         else:
+            model_path = self.data_path + "cardbox2.obj"
             mass = 2.0
-        
-        texture_path = self.data_path + "white.png"
-        
-        obj_id = self.env.add_box(
-            texture_path=texture_path,
-            half_extent=half_extent,
+            
+        obj_id = self.env.add_model(
+            path=model_path,
+            scale=scale,
             pos=pos,
-            rot=rot,
+            rot=0.0,
             mass=mass,
-            detect_collision=False)
+            detect_collision=False,
+            use_mesh_collision=False)
         self.stage_obj_ids.append(obj_id)
 
     def _locate_luobject_obj(self, pos, rot, size, lu_type):
         # TODO:
         pos = [pos.x-20, pos.y + size.y*0.5, -pos.z+20]
         rot = 2.0 * math.pi * -rot / 360.0
-        scale = [size.x*0.2,
-                 size.y*0.2 * 10.0,
-                 size.z*0.2]
+        scale = [size.x*0.3,
+                 size.y*1.0,
+                 size.z*0.1]
         
         if lu_type == LU_TYPE_L:
             model_path = self.data_path + "lobject.obj"
@@ -279,8 +298,7 @@ class AAIEnvironment(object):
                 pos = item.positions[0]
                 rot = item.rotations[0]
                 rot = 2.0 * math.pi * -rot / 360.0
-                # TODO: 本当はagenty=0.5の位置になる
-                self.env.locate_agent(pos=[pos.x-20, pos.y+1, -pos.z+20], rot_y=rot)
+                self.env.locate_agent(pos=[pos.x-20, pos.y+0.5, -pos.z+20], rot_y=rot)
 
             elif item.name == "GoodGoal" or \
                  item.name == "GoodGoalBounce" or \
