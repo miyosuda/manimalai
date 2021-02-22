@@ -185,16 +185,16 @@ class AAIEnvironment(object):
 
     def _locate_ramp_obj(self, pos, rot, color, size):
         # TODO: 本当はmodelの中心をfbxに合わせるべき
-        pos = [pos.x-20, pos.y, -pos.z+20]        
+        pos = [pos.x-20, pos.y, -pos.z+20]
         rot = 2.0 * math.pi * -rot / 360.0
         color = [color.r/255.0, color.g/255.0, color.b/255.0]
         scale = [size.x*0.5, size.y*0.5, size.z*0.5]
         
-        model_path = self.data_path + "ramp0.obj"
+        model_path = self.data_path + "ramp.obj"
         obj_id = self.env.add_model(path=model_path,
                                     scale=scale,
                                     pos=pos,
-                                    rot=0.0,
+                                    rot=rot,
                                     mass=0.0,
                                     color=color,
                                     detect_collision=False,
@@ -206,11 +206,11 @@ class AAIEnvironment(object):
         rot = 2.0 * math.pi * -rot / 360.0
         scale = [size.x*0.5, size.y*0.5, size.z*0.5]
         
-        model_path = self.data_path + "cylinder0.obj"
+        model_path = self.data_path + "cylinder.obj"
         obj_id = self.env.add_model(path=model_path,
                                     scale=scale,
                                     pos=pos,
-                                    rot=0.0,
+                                    rot=rot,
                                     mass=0.0,
                                     detect_collision=False,
                                     use_mesh_collision=True)
@@ -258,7 +258,7 @@ class AAIEnvironment(object):
             path=model_path,
             scale=scale,
             pos=pos,
-            rot=0.0,
+            rot=rot,
             mass=mass,
             detect_collision=False,
             use_mesh_collision=False)
@@ -268,9 +268,10 @@ class AAIEnvironment(object):
         # TODO:
         pos = [pos.x-20, pos.y + size.y*0.5, -pos.z+20]
         rot = 2.0 * math.pi * -rot / 360.0
-        scale = [size.x*0.3,
+        # TODO: Wow swapping scale adjustment of x and z.
+        scale = [size.x*0.1,
                  size.y*1.0,
-                 size.z*0.1]
+                 size.z*0.3]
         
         if lu_type == LU_TYPE_L:
             model_path = self.data_path + "lobject.obj"
@@ -283,10 +284,11 @@ class AAIEnvironment(object):
         obj_id = self.env.add_model(path=model_path,
                                     scale=scale,
                                     pos=pos,
-                                    rot=0.0,
+                                    rot=rot,
                                     mass=mass,
                                     detect_collision=False,
-                                    use_mesh_collision=True)
+                                    use_mesh_collision=False,
+                                    use_collision_file=True)
         self.stage_obj_ids.append(obj_id)
 
     def _reset_sub(self):

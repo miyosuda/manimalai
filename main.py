@@ -87,7 +87,8 @@ def main():
     #config_path = "./configurations/10-12-1.yml" # L2Object
     #config_path = "./configurations/10-13-1.yml" # LObject, LObject2, UObject
     #config_path = "./configurations/10-13-3.yml"
-    config_path = "./debug_configurations/debug0.yml"
+    #config_path = "./debug_configurations/debug0.yml"
+    config_path = "./debug_configurations/debug1.yml"
     
     display_size = (512, 256)
     display = Display(display_size, config_path)
