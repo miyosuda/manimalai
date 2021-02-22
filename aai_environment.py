@@ -53,7 +53,7 @@ class AAIEnvironment(object):
         
     def _prepare_fixed_stage(self):
         # Floor
-        floor_texture_path = self.data_path + "floor0.png"
+        floor_texture_path = self.data_path + "stage/floor.png"
         
         self.env.add_box(
             texture_path=floor_texture_path,
@@ -65,7 +65,7 @@ class AAIEnvironment(object):
         # Wall
         wall_distance = 20.0
         
-        wall_texture_path = self.data_path + "wall0.png"
+        wall_texture_path = self.data_path + "stage/wall.png"
 
         # -Z
         self.env.add_box(
@@ -133,11 +133,11 @@ class AAIEnvironment(object):
     def _locate_goal_obj(self, pos, size, rot, good, bounce, multi):
         if good:
             if multi:
-                texture_path = self.data_path + "yellow.png"
+                texture_path = self.data_path + "misc/good_goal_multi.png"
             else:
-                texture_path = self.data_path + "green.png"
+                texture_path = self.data_path + "misc/good_goal.png"
         else:
-            texture_path = self.data_path + "red.png"
+            texture_path = self.data_path + "misc/bad_goal.png"
         
         radius = size.x * 0.5
         pos = [pos.x-20, radius, -pos.z+20]
@@ -190,7 +190,7 @@ class AAIEnvironment(object):
         color = [color.r/255.0, color.g/255.0, color.b/255.0]
         scale = [size.x*0.5, size.y*0.5, size.z*0.5]
         
-        model_path = self.data_path + "ramp.obj"
+        model_path = self.data_path + "immovable/ramp.obj"
         obj_id = self.env.add_model(path=model_path,
                                     scale=scale,
                                     pos=pos,
@@ -206,7 +206,7 @@ class AAIEnvironment(object):
         rot = 2.0 * math.pi * -rot / 360.0
         scale = [size.x*0.5, size.y*0.5, size.z*0.5]
         
-        model_path = self.data_path + "cylinder.obj"
+        model_path = self.data_path + "immovable/cylinder.obj"
         obj_id = self.env.add_model(path=model_path,
                                     scale=scale,
                                     pos=pos,
@@ -222,10 +222,9 @@ class AAIEnvironment(object):
         half_extent = [size.x*0.5, 0.01, size.z*0.5]
 
         if death:
-            texture_path = self.data_path + "red.png"
+            texture_path = self.data_path + "immovable/death_zone.png"
         else:
-            # TODO:
-            texture_path = self.data_path + "white.png"
+            texture_path = self.data_path + "immovable/hot_zone.png"
         
         obj_id = self.env.add_box(
             texture_path=texture_path,
@@ -249,9 +248,9 @@ class AAIEnvironment(object):
         
         if light:
             mass = 1.0
-            model_path = self.data_path + "cardbox1.obj"
+            model_path = self.data_path + "movable/cardbox1.obj"
         else:
-            model_path = self.data_path + "cardbox2.obj"
+            model_path = self.data_path + "movable/cardbox2.obj"
             mass = 2.0
             
         obj_id = self.env.add_model(
@@ -274,11 +273,11 @@ class AAIEnvironment(object):
                  size.z*0.3]
         
         if lu_type == LU_TYPE_L:
-            model_path = self.data_path + "lobject.obj"
+            model_path = self.data_path + "movable/lobject.obj"
         elif lu_type == LU_TYPE_L2:
-            model_path = self.data_path + "lobject2.obj"
+            model_path = self.data_path + "movable/lobject2.obj"
         elif lu_type == LU_TYPE_U:
-            model_path = self.data_path + "uobject.obj"
+            model_path = self.data_path + "movable/uobject.obj"
             
         mass = 1.0
         obj_id = self.env.add_model(path=model_path,
