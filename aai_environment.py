@@ -161,7 +161,7 @@ class AAIEnvironment(object):
         if impulse is not None:
             self.env.apply_impulse(obj_id, impulse)
         
-        # TODO: Goaldのサイズ毎に報酬の値を変えるか?
+        # TODO: Change reward depending on the goal size?
         if good:
             self.reward_table[obj_id] = 1
         if not multi:
@@ -247,8 +247,8 @@ class AAIEnvironment(object):
         rot = 2.0 * math.pi * -rot / 360.0
         
         if light:
-            mass = 1.0
             model_path = self.data_path + "movable/cardbox1.obj"
+            mass = 1.0
         else:
             model_path = self.data_path + "movable/cardbox2.obj"
             mass = 2.0
@@ -267,7 +267,7 @@ class AAIEnvironment(object):
         # TODO:
         pos = [pos.x-20, pos.y + size.y*0.5, -pos.z+20]
         rot = 2.0 * math.pi * -rot / 360.0
-        # TODO: Wow swapping scale adjustment of x and z.
+        # TODO: now swapping scale adjustment of x and z.
         scale = [size.x*0.1,
                  size.y*1.0,
                  size.z*0.3]
