@@ -6,7 +6,7 @@ import math
 import random
 import numpy as np
 
-from arena_config import ArenaConfig
+from arena_config import ArenaConfig, RGB
 
 LU_TYPE_L  = 1
 LU_TYPE_L2 = 2
@@ -24,7 +24,7 @@ class AAIEnvironment(gym.Env):
             high=255,
             shape=(84,84,3)
         )
-        self.reward_range = [-1.0, 1.0]
+        self.reward_range = [-np.inf, np.inf]
         
         # Load arena config yaml
         config_path = os.path.dirname(os.path.abspath(__file__)) + \
@@ -65,6 +65,32 @@ class AAIEnvironment(gym.Env):
         
         # Reset stage
         self.reset()
+
+    def _convert_pos(self, pos, offset_y):
+        if pos is not None:
+            x = pos.x
+            y = pos.y
+            z = pos.z
+            if x < 0:
+                x = np.random.rand() * 40
+            if z < 0:
+                z = np.random.rand() * 40
+            return [x-20, offset_y + y, -z+20]
+        else:
+            return [np.random.rand() * 40 - 20, offset_y, np.random.rand() * 40 - 20]
+
+    def _convert_color(self, color):
+        if type(color) is RGB:
+            return [color.r/255.0, color.g/255.0, color.b/255.0]
+        else:
+            return [color.x/255.0, color.y/255.0, color.z/255.0]
+
+    def _convert_rot(self, rot):
+        if rot is not None:
+            rot = 2.0 * math.pi * -rot / 360.0
+        else:
+            rot = np.random.rand() * 2.0 * math.pi
+        return rot
         
     def _prepare_fixed_stage(self):
         # Floor
@@ -144,6 +170,17 @@ class AAIEnvironment(gym.Env):
             rot=0.0,
             detect_collision=False,
             visible=False)
+        
+    def _locate_agent(self, pos, rot):
+        if pos is not None:
+            pos = [pos.x-20, pos.y+0.5, -pos.z+20]
+        else:
+            pos = [np.random.rand() * 40 - 20, 0.5, np.random.rand() * 40 - 20]
+        if rot is not None:
+            rot = 2.0 * math.pi * -rot / 360.0
+        else:
+            rot = np.random.rand() * 2.0 * math.pi
+        self.env.locate_agent(pos, rot_y=rot)
 
     def _locate_goal_obj(self, pos, size, rot, good, bounce, multi):
         if good:
@@ -155,10 +192,11 @@ class AAIEnvironment(gym.Env):
             texture_path = self.data_path + "misc/bad_goal.png"
         
         radius = size.x * 0.5
-        pos = [pos.x-20, radius, -pos.z+20]
+        pos = self._convert_pos(pos, offset_y=radius)
 
         impulse = None
-        if rot is not None and bounce:
+        if bounce:
+            rot = self._convert_rot(rot)
             IMPULSE_MAGNITUDE = 10.0
             impulse = [IMPULSE_MAGNITUDE * np.sin(rot),
                        0,
@@ -185,10 +223,10 @@ class AAIEnvironment(gym.Env):
 
     def _locate_wall_obj(self, pos, rot, color, size):
         pos = [pos.x-20, pos.y + size.y*0.5, -pos.z+20]
-        color = [color.r/255.0, color.g/255.0, color.b/255.0]
+        color = self._convert_color(color)
         half_extent = [size.x*0.5, size.y*0.5, size.z*0.5]
-        rot = 2.0 * math.pi * -rot / 360.0
-        
+        rot = self._convert_rot(rot)
+            
         obj_id = self.env.add_box(
             color=color,
             half_extent=half_extent,
@@ -201,7 +239,7 @@ class AAIEnvironment(gym.Env):
     def _locate_ramp_obj(self, pos, rot, color, size):
         # TODO: 本当はmodelの中心をfbxに合わせるべき
         pos = [pos.x-20, pos.y, -pos.z+20]
-        rot = 2.0 * math.pi * -rot / 360.0
+        rot = self._convert_rot(rot)
         color = [color.r/255.0, color.g/255.0, color.b/255.0]
         scale = [size.x*0.5, size.y*0.5, size.z*0.5]
         
@@ -218,7 +256,7 @@ class AAIEnvironment(gym.Env):
 
     def _locate_cylinder_obj(self, pos, rot, size):
         pos = [pos.x-20, pos.y, -pos.z+20]
-        rot = 2.0 * math.pi * -rot / 360.0
+        rot = self._convert_rot(rot)
         scale = [size.x*0.5, size.y*0.5, size.z*0.5]
         
         model_path = self.data_path + "immovable/cylinder.obj"
@@ -233,7 +271,7 @@ class AAIEnvironment(gym.Env):
 
     def _locate_zone_obj(self, pos, rot, size, death):
         pos = [pos.x-20, pos.y+0.01, -pos.z+20]
-        rot = 2.0 * math.pi * -rot / 360.0
+        rot = self._convert_rot(rot)
         half_extent = [size.x*0.5, 0.01, size.z*0.5]
 
         if death:
@@ -259,7 +297,7 @@ class AAIEnvironment(gym.Env):
         scale = [size.x*0.5,
                  size.y*0.5,
                  size.z*0.5]
-        rot = 2.0 * math.pi * -rot / 360.0
+        rot = self._convert_rot(rot)
         
         if light:
             model_path = self.data_path + "movable/cardbox1.obj"
@@ -281,7 +319,7 @@ class AAIEnvironment(gym.Env):
     def _locate_luobject_obj(self, pos, rot, size, lu_type):
         # TODO:
         pos = [pos.x-20, pos.y + size.y*0.5, -pos.z+20]
-        rot = 2.0 * math.pi * -rot / 360.0
+        rot = self._convert_rot(rot)
         # TODO: now swapping scale adjustment of x and z.
         scale = [size.x*0.1,
                  size.y*1.0,
@@ -305,16 +343,45 @@ class AAIEnvironment(gym.Env):
                                     use_collision_file=True)
         self.stage_obj_ids.append(obj_id)
 
+    def get_item_element_size(self, item):
+        return np.max([len(item.positions),
+                       len(item.rotations),
+                       len(item.sizes),
+                       len(item.colors)])
+
+    def get_item_position(self, item, index):
+        if index < len(item.positions):
+            return item.positions[index]
+        else:
+            return None
+
+    def get_item_rotation(self, item, index):
+        if index < len(item.rotations):
+            return item.rotations[index]
+        else:
+            return None
+
+    def get_item_size(self, item, index):
+        if index < len(item.sizes):
+            return item.sizes[index]
+        else:
+            return None
+
+    def get_item_color(self, item, index):
+        if index < len(item.colors):
+            return item.colors[index]
+        else:
+            return None
+
     def _reset_sub(self):
         # First clear remaining reward objects
         self._clear_objects()
         
         for item in self.arena.items:
             if item.name == "Agent":
-                pos = item.positions[0]
-                rot = item.rotations[0]
-                rot = 2.0 * math.pi * -rot / 360.0
-                self.env.locate_agent(pos=[pos.x-20, pos.y+0.5, -pos.z+20], rot_y=rot)
+                pos = self.get_item_position(item, 0)
+                rot = self.get_item_rotation(item, 0)
+                self._locate_agent(pos, rot)
 
             elif item.name == "GoodGoal" or \
                  item.name == "GoodGoalBounce" or \
@@ -334,62 +401,59 @@ class AAIEnvironment(gym.Env):
                 else:
                     bounce = False
 
-                if "Mutli" in name:
+                if "Multi" in name:
                     multi = True
                 else:
                     multi = False
             
-                for i in range(len(item.positions)):
-                    pos = item.positions[i]
-                    size = item.sizes[i]
-                    if bounce:
-                        rot = item.rotations[i]
-                    else:
-                        rot = None
+                for i in range(self.get_item_element_size(item)):
+                    pos = self.get_item_position(item, i)
+                    size = self.get_item_size(item, i)
+                    rot = self.get_item_rotation(item, i)
                     self._locate_goal_obj(pos, size, rot, good, bounce, multi)
             elif item.name == "Wall":
-                for i in range(len(item.positions)):
-                    pos = item.positions[i]
-                    rot = item.rotations[i]
-                    color = item.colors[i]
-                    size = item.sizes[i]
+                for i in range(self.get_item_element_size(item)):
+                    pos = self.get_item_position(item, i)
+                    rot = self.get_item_rotation(item, i)
+                    color = self.get_item_color(item, i)
+                    size = self.get_item_size(item, i)
                     self._locate_wall_obj(pos, rot, color, size)
             elif item.name == "Ramp":
-                for i in range(len(item.positions)):
-                    pos = item.positions[i]
-                    rot = item.rotations[i]
-                    color = item.colors[i]
-                    size = item.sizes[i]
+                for i in range(self.get_item_element_size(item)):
+                    pos = self.get_item_position(item, i)
+                    rot = self.get_item_rotation(item, i)
+                    color = self.get_item_color(item, i)
+                    size = self.get_item_size(item, i)
                     self._locate_ramp_obj(pos, rot, color, size)
             elif item.name == "CylinderTunnelTransparent" or \
                  item.name == "CylinderTunnel":
-                for i in range(len(item.positions)):
-                    pos = item.positions[i]
-                    rot = item.rotations[i]
-                    size = item.sizes[i]
+                for i in range(self.get_item_element_size(item)):
+                    pos = self.get_item_position(item, i)
+                    rot = self.get_item_rotation(item, i)
+                    size = self.get_item_size(item, i)
                     self._locate_cylinder_obj(pos, rot, size)
             elif item.name == "DeathZone" or item.name == "HotZone":
-                for i in range(len(item.positions)):
-                    pos = item.positions[i]
-                    rot = item.rotations[i]
-                    size = item.sizes[i]
+                for i in range(self.get_item_element_size(item)):
+                    pos = self.get_item_position(item, i)
+                    rot = self.get_item_rotation(item, i)
+                    size = self.get_item_size(item, i)
                     self._locate_zone_obj(pos, rot, size,
                                           death=item.name=="DeathZone")
             elif item.name == "Cardbox1" or item.name == "Cardbox2":
-                for i in range(len(item.positions)):
-                    pos = item.positions[i]
-                    rot = item.rotations[i]
-                    size = item.sizes[i]
+                for i in range(self.get_item_element_size(item)):
+                    pos = self.get_item_position(item, i)
+                    rot = self.get_item_rotation(item, i)
+                    size = self.get_item_size(item, i)
                     self._locate_cardbox_obj(pos, rot, size,
                                              light=item.name=="Cardbox1")
             elif item.name == "LObject" or \
                  item.name == "LObject2" or \
                  item.name == "UObject":
                  
-                for i in range(len(item.positions)):
-                    pos = item.positions[i]
-                    rot = item.rotations[i]
-                    size = item.sizes[i]
+                for i in range(self.get_item_element_size(item)):
+                    pos = self.get_item_position(item, i)
+                    rot = self.get_item_rotation(item, i)
+                    size = self.get_item_size(item, i)
                     if item.name == "LObject":
                         lu_type = LU_TYPE_L
                     elif item.name == "LObject2":
@@ -415,7 +479,7 @@ class AAIEnvironment(gym.Env):
         self.stage_obj_ids = []
         self.reward_table = {}
         self.terminate_obj_ids = set()
-        self.hot_zone_obj_ids = set()   
+        self.hot_zone_obj_ids = set()
 
     def _calc_hotzone_damage(self):
         # TODO: 時間に応じたダメージの計算

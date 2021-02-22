@@ -90,7 +90,10 @@ def main():
     #task_id = "10-13-1" # LObject, LObject2, UObject
     #task_id = "10-13-3"
     #task_id = "debug0"
-    task_id = "debug1"
+    #task_id = "debug1"
+    #task_id = "1-20-1"
+    #task_id = "10-22-1"
+    task_id = "4-29-1"
     
     display_size = (512, 256)
     display = Display(display_size, task_id)
