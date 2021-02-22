@@ -1,18 +1,21 @@
+import gym
 import numpy as np
 import pygame, sys
 from pygame.locals import *
+from gym.envs.registration import register
 
-from aai_environment import AAIEnvironment
+register(id='MiniAnimalAI-v0',
+         entry_point='aai_environment:AAIEnvironment')
 
 BLACK = (0, 0, 0)
 
 
 class Display(object):
-    def __init__(self, display_size, config_path):
+    def __init__(self, display_size, task_id):
         self.width = display_size[0]
         self.height = display_size[1]
         
-        self.env = AAIEnvironment(256, 256, config_path)
+        self.env = gym.make('MiniAnimalAI-v0', width=256, height=256, task_id=task_id)
         
         pygame.init()
         
@@ -27,28 +30,27 @@ class Display(object):
         self.process()
         pygame.display.update()
 
-    def get_real_action(self):
-        lookAction = 0
-        moveAction = 0
+    def get_action(self):
+        lookAction = 1
+        moveAction = 1
 
         pressed = pygame.key.get_pressed()
 
         if pressed[K_a]:
-            lookAction += 6
+            lookAction += 1
         if pressed[K_d]:
-            lookAction -= 6
+            lookAction -= 1
         if pressed[K_w]:
             moveAction += 1
         if pressed[K_s]:
             moveAction -= 1
 
-        # TODO: actionの整理
-        return [lookAction, 0, moveAction]
+        return [lookAction, moveAction]
 
     def process(self):
-        real_action = self.get_real_action()
+        action = self.get_action()
 
-        state, reward, terminal = self.env.step(real_action=real_action)
+        state, reward, terminal, _ = self.env.step(action=action)
 
         top_image = self.env.get_top_view()
 
@@ -72,26 +74,26 @@ class Display(object):
 
 
 def main():
-    #config_path = "./configurations/1-1-1.yml"
-    #config_path = "./configurations/1-1-2.yml"
-    #config_path = "./configurations/1-1-3.yml"
-    #config_path = "./configurations/1-3-1.yml"
-    #config_path = "./configurations/2-1-1.yml" # wall
-    #config_path = "./configurations/3-16-1.yml" # ramp
-    #config_path = "./configurations/3-28-1.yml" # maze
-    #config_path = "./configurations/3-15-1.yml" # Cylinder
-    #config_path = "./configurations/10-1-1.yml" # death zone, Cardbox2
-    #config_path = "./configurations/10-25-1.yml" # Cardbox1
-    #config_path = "./configurations/1-18-1.yml" # GoodGoalBounce
-    #config_path = "./configurations/10-11-1.yml" # LObject, UObject
-    #config_path = "./configurations/10-12-1.yml" # L2Object
-    #config_path = "./configurations/10-13-1.yml" # LObject, LObject2, UObject
-    #config_path = "./configurations/10-13-3.yml"
-    #config_path = "./debug_configurations/debug0.yml"
-    config_path = "./debug_configurations/debug1.yml"
+    #task_id = "1-1-1"
+    #task_id = "1-1-2"
+    #task_id = "1-1-3"
+    #task_id = "1-3-1"
+    #task_id = "2-1-1" # wall
+    #task_id = "3-16-1" # ramp
+    #task_id = "3-28-1" # maze
+    #task_id = "3-15-1" # Cylinder
+    #task_id = "10-1-1" # death zone, Cardbox2
+    #task_id = "10-25-1" # Cardbox1
+    #task_id = "1-18-1" # GoodGoalBounce
+    #task_id = "10-11-1" # LObject, UObject
+    #task_id = "10-12-1" # L2Object
+    #task_id = "10-13-1" # LObject, LObject2, UObject
+    #task_id = "10-13-3"
+    #task_id = "debug0"
+    task_id = "debug1"
     
     display_size = (512, 256)
-    display = Display(display_size, config_path)
+    display = Display(display_size, task_id)
     clock = pygame.time.Clock()
 
     running = True

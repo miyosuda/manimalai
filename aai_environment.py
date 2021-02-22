@@ -1,19 +1,34 @@
+import gym
+import gym.spaces
 import rodentia
 import os
 import math
 import random
 import numpy as np
 
-from envs.arena_config import ArenaConfig
+from arena_config import ArenaConfig
 
 LU_TYPE_L  = 1
 LU_TYPE_L2 = 2
 LU_TYPE_U  = 3
 
 
-class AAIEnvironment(object):
-    def __init__(self, width, height, config_path, arena_index=0):
+class AAIEnvironment(gym.Env):
+    def __init__(self, width=256, height=256, task_id="1-1-1", arena_index=0):
+        super().__init__()
+
+        # Gym setting
+        self.action_space = gym.spaces.MultiDiscrete((3,3))
+        self.observation_space = gym.spaces.Box(
+            low=0,
+            high=255,
+            shape=(84,84,3)
+        )
+        self.reward_range = [-1.0, 1.0]
+        
         # Load arena config yaml
+        config_path = os.path.dirname(os.path.abspath(__file__)) + \
+                      "/configurations/{}.yml".format(task_id)
         config = ArenaConfig(config_path)
         self.arena = config.arenas[arena_index]
         
@@ -405,9 +420,15 @@ class AAIEnvironment(object):
     def _calc_hotzone_damage(self):
         # TODO: 時間に応じたダメージの計算
         return 1e-5
+
+    def _convert_to_real_action(self, action):
+        real_action = [0, 0, 0]
+        real_action[0] = (np.clip(action[0], 0, 2) - 1) * 6
+        real_action[2] = np.clip(action[1], 0, 2) - 1
+        return np.array(real_action, dtype=np.int32)
         
-    def step(self, real_action):
-        # TODO: actionの整理
+    def step(self, action):
+        real_action = self._convert_to_real_action(action)
         obs = self.env.step(action=real_action)
         self.step_num += 1
         
@@ -441,7 +462,7 @@ class AAIEnvironment(object):
         if terminal:
             screen = self._reset_sub()
         
-        return screen, reward, terminal
+        return screen, reward, terminal, {}
     
 
     def get_top_view(self):
