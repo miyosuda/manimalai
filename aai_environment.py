@@ -6,7 +6,7 @@ import math
 import random
 import numpy as np
 
-from arena_config import ArenaConfig, RGB
+from arena_config import ArenaConfig, RGB, Vector3
 
 LU_TYPE_L  = 1
 LU_TYPE_L2 = 2
@@ -82,8 +82,10 @@ class AAIEnvironment(gym.Env):
     def _convert_color(self, color):
         if type(color) is RGB:
             return [color.r/255.0, color.g/255.0, color.b/255.0]
-        else:
+        elif type(color) is Vector3:
             return [color.x/255.0, color.y/255.0, color.z/255.0]
+        else:
+            return [np.random.rand(), np.random.rand(), np.random.rand()]
 
     def _convert_rot(self, rot):
         if rot is not None:
@@ -240,7 +242,7 @@ class AAIEnvironment(gym.Env):
         # TODO: 本当はmodelの中心をfbxに合わせるべき
         pos = [pos.x-20, pos.y, -pos.z+20]
         rot = self._convert_rot(rot)
-        color = [color.r/255.0, color.g/255.0, color.b/255.0]
+        color = self._convert_color(color)
         scale = [size.x*0.5, size.y*0.5, size.z*0.5]
         
         model_path = self.data_path + "immovable/ramp.obj"

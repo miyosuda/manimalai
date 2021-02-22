@@ -26,12 +26,6 @@ def main():
     config_files = os.listdir("./configurations")
     config_files.sort()
 
-    # [ok]
-    # 1-
-    # 2-
-    # 3-
-    # 10-
-    
     for file in config_files:
         if ".yml" in file:
             task_id = file[:-4]
