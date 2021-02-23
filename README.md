@@ -1,6 +1,6 @@
 # ManimalAI
 
-ManimalAI is an [AnimalAI](http://animalaiolympics.com/AAI/) clone eazy to install environment. Same arena configuration files of AnimalAI are used. To embody rigid body simulation and rendering, [rodentia](https://github.com/miyosuda/rodentia) library is used instead of Unity.
+ManimalAI is an [AnimalAI](http://animalaiolympics.com/AAI/) clone eazy to install environment. To embody rigid body simulation and rendering, [rodentia](https://github.com/miyosuda/rodentia) library is used instead of Unity. **(Now work in progress)**
 
 ![eight_arm_maze0](docs/images/eight_arm_maze0.gif)
 
@@ -84,6 +84,7 @@ for i in range(10):
 
 # TODO
 
+- [ ] Fix positin and rotation of the objects
 - [ ] Transparent objects
 - [ ] Mass / friction adjustment
 - [ ] Hotzone damage adjustment
