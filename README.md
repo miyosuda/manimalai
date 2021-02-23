@@ -1,6 +1,6 @@
-# ManimalAI
+# Manimal-AI
 
-ManimalAI is an [AnimalAI](http://animalaiolympics.com/AAI/) clone eazy to install environment. To embody rigid body simulation and rendering, [rodentia](https://github.com/miyosuda/rodentia) library is used instead of Unity. **(Now work in progress)**
+Manimal-AI is an easy-to-install [AnimalAI](http://animalaiolympics.com/AAI/) clone environment. To embody rigid body simulation and rendering, [rodentia](https://github.com/miyosuda/rodentia) library is used instead of Unity. **(Now work in progress)**
 
 ![eight_arm_maze0](docs/images/eight_arm_maze0.gif)
 
@@ -14,6 +14,7 @@ ManimalAI is an [AnimalAI](http://animalaiolympics.com/AAI/) clone eazy to insta
 
 - Linux (Tested on Ubuntu 18.04)
 - MacOSX (Tested on MacOSX 10.15.7, Catalina)
+
 
 
 # Install
@@ -30,13 +31,13 @@ If `cmake` is not installed, install it.
     $ sudo apt-get install cmake
 
 
-And install with `manimalai` with pip
+And install `manimalai` with pip
 
     $ sudo apt-get install -y python3-dev
     $ pip3 install manimalai
 
 
-​    
+
 ## MacOSX
 
 First confirm whether `cmake` is installed.
@@ -47,9 +48,11 @@ If `cmake` is not installed, install it.
 
     $ brew install cmake
 
-And install with `manimalai` with pip
+And install `manimalai` with pip
 
     $ pip3 install manimalai
+
+
 
 ## Example
 
@@ -85,7 +88,9 @@ for i in range(10):
 # TODO
 
 - [ ] Transparent objects
+- [ ] Blackouts
 - [ ] Mass / friction adjustment
-- [ ] Hotzone damage adjustment
-- [ ] Shadowmap bug fixing
+- [ ] HotZone damage adjustment
+- [ ] Shadow map bug fixing
 - [ ] Add Dockerfile
+
