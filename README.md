@@ -2,6 +2,14 @@
 
 ManimalAI is an [AnimalAI](http://animalaiolympics.com/AAI/) clone eazy to install environment. Same arena configuration files of AnimalAI are used. To embody rigid body simulation and rendering, [rodentia](https://github.com/miyosuda/rodentia) library is used instead of Unity.
 
+![eight_arm_maze0](docs/images/eight_arm_maze0.gif)
+
+
+
+![uobject0](docs/images/uobject0.gif)
+
+
+
 # Supported platforms
 
 - Linux (Tested on Ubuntu 18.04)
@@ -27,7 +35,8 @@ And install with `manimalai` with pip
     $ sudo apt-get install -y python3-dev
     $ pip3 install manimalai
 
-    
+
+​    
 ## MacOSX
 
 First confirm whether `cmake` is installed.
@@ -68,6 +77,9 @@ for i in range(10):
     pimage = Image.fromarray(state)
     pimage.save("frame{}.png".format(i))
 ```
+
+![frame0](docs/images/frame0.png)
+
 
 
 # TODO

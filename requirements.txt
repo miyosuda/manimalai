@@ -1,2 +1,3 @@
-rodentia>=0.0.8
 gym>=0.18.0
+rodentia>=0.0.8
+PyYAML>=5.3
