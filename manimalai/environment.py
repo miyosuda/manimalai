@@ -200,9 +200,9 @@ class AAIEnvironment(gym.Env):
         if bounce:
             rot = self._convert_rot(rot)
             IMPULSE_MAGNITUDE = 10.0
-            impulse = [IMPULSE_MAGNITUDE * np.sin(rot),
+            impulse = [-IMPULSE_MAGNITUDE * np.sin(rot),
                        0,
-                       IMPULSE_MAGNITUDE * np.cos(rot)]
+                       -IMPULSE_MAGNITUDE * np.cos(rot)]
         
         ball_mass = 0.5
         obj_id = self.env.add_sphere(

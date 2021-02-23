@@ -84,7 +84,6 @@ for i in range(10):
 
 # TODO
 
-- [ ] Check position and rotation of the objects.
 - [ ] Transparent objects
 - [ ] Mass / friction adjustment
 - [ ] Hotzone damage adjustment
