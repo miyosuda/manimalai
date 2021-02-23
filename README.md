@@ -1,6 +1,6 @@
 # Manimal-AI
 
-Manimal-AI is an easy-to-install [AnimalAI](http://animalaiolympics.com/AAI/) clone environment. To embody rigid body simulation and rendering, [rodentia](https://github.com/miyosuda/rodentia) library is used instead of Unity. **(Now work in progress)**
+Manimal-AI is an easy-to-install [Animal-AI](http://animalaiolympics.com/AAI/) clone environment. To embody rigid body simulation and rendering, [rodentia](https://github.com/miyosuda/rodentia) library is used instead of Unity. **(Now work in progress)**
 
 ![eight_arm_maze0](docs/images/eight_arm_maze0.gif)
 
