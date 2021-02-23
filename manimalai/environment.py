@@ -239,7 +239,6 @@ class AAIEnvironment(gym.Env):
         self.stage_obj_ids.append(obj_id)
 
     def _locate_ramp_obj(self, pos, rot, color, size):
-        # TODO: 本当はmodelの中心をfbxに合わせるべき
         pos = [pos.x-20, pos.y, -pos.z+20]
         rot = self._convert_rot(rot)
         color = self._convert_color(color)
@@ -484,7 +483,7 @@ class AAIEnvironment(gym.Env):
         self.hot_zone_obj_ids = set()
 
     def _calc_hotzone_damage(self):
-        # TODO: 時間に応じたダメージの計算
+        # TODO: Calculate damage based on elapsed time.
         return 1e-5
 
     def _convert_to_real_action(self, action):

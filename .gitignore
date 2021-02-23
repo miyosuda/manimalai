@@ -1,3 +1,8 @@
 __pycache__
 .DS_Store
-captures
+example/captures
+debug
+dist/
+build/
+manimalai.egg-info/
+

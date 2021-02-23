@@ -20,8 +20,11 @@ def capture_task(task_id):
     
 
 def main():
-    config_files = os.listdir("./manimalai/configurations")
+    config_files = os.listdir("../manimalai/configurations")
     config_files.sort()
+
+    if not os.path.exists("./captures"):
+        os.makedirs("./captures")
 
     for file in config_files:
         if ".yml" in file:

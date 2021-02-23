@@ -1,5 +1,6 @@
 import gym
 import numpy as np
+import argparse
 import pygame, sys
 from pygame.locals import *
 
@@ -17,7 +18,6 @@ class Display(object):
         
         pygame.init()
         
-        #self.surface = pygame.display.set_mode(display_size, 0, 24)
         self.surface = pygame.display.set_mode(display_size, 0, 32)
         pygame.display.set_caption('manimalai')
         
@@ -66,30 +66,13 @@ class Display(object):
         if terminal:
             self.last_state = self.env.reset()
 
-    def get_frame(self):
-        data = self.surface.get_buffer().raw
-        return data
-
 
 def main():
-    #task_id = "1-1-1"
-    #task_id = "1-1-2"
-    #task_id = "1-1-3"
-    #task_id = "1-3-1"
-    #task_id = "2-1-1" # wall
-    #task_id = "3-16-1" # ramp
-    #task_id = "3-28-1" # maze
-    #task_id = "3-15-1" # Cylinder
-    #task_id = "10-1-1" # death zone, Cardbox2
-    #task_id = "10-25-1" # Cardbox1
-    #task_id = "1-18-1" # GoodGoalBounce
-    #task_id = "10-11-1" # LObject, UObject
-    #task_id = "10-12-1" # L2Object
-    #task_id = "10-13-1" # LObject, LObject2, UObject
-    #task_id = "10-13-3"
-    #task_id = "debug0"
-    #task_id = "debug1"
-    task_id = "2-3-3"
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--task", type=str,
+                        default="1-1-1")
+    args = parser.parse_args()
+    task_id = args.task
     
     display_size = (512, 256)
     display = Display(display_size, task_id)
@@ -97,14 +80,6 @@ def main():
 
     running = True
     FPS = 30
-
-    recording = False
-    
-    if recording:
-        from movie_writer import MovieWriter
-        writer = MovieWriter("out.mov", display_size, FPS)
-    else:
-        writer = None
 
     while running:
         for event in pygame.event.get():
@@ -116,16 +91,6 @@ def main():
 
         display.update()
         clock.tick(FPS)
-
-        if writer is not None:
-            frame_str = display.get_frame()
-            d = np.fromstring(frame_str, dtype=np.uint8)
-            d = d.reshape((display_size[1], display_size[0], 4))
-            d = d[:,:,:3]
-            writer.add_frame(d)
-
-    if writer is not None:
-        writer.close()
 
 
 if __name__ == '__main__':
