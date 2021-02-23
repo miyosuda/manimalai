@@ -2,10 +2,8 @@ import gym
 import numpy as np
 import pygame, sys
 from pygame.locals import *
-from gym.envs.registration import register
 
-register(id='MiniAnimalAI-v0',
-         entry_point='aai_environment:AAIEnvironment')
+import manimalai
 
 BLACK = (0, 0, 0)
 
@@ -15,13 +13,13 @@ class Display(object):
         self.width = display_size[0]
         self.height = display_size[1]
         
-        self.env = gym.make('MiniAnimalAI-v0', width=256, height=256, task_id=task_id)
+        self.env = gym.make('ManimalAI-v0', width=256, height=256, task_id=task_id)
         
         pygame.init()
         
         #self.surface = pygame.display.set_mode(display_size, 0, 24)
         self.surface = pygame.display.set_mode(display_size, 0, 32)
-        pygame.display.set_caption('mini-animalai')
+        pygame.display.set_caption('manimalai')
         
         self.last_state = self.env.reset()
 
@@ -91,7 +89,7 @@ def main():
     #task_id = "10-13-3"
     #task_id = "debug0"
     #task_id = "debug1"
-    task_id = "2-27-3"
+    task_id = "2-3-3"
     
     display_size = (512, 256)
     display = Display(display_size, task_id)

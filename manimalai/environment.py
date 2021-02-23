@@ -6,7 +6,7 @@ import math
 import random
 import numpy as np
 
-from arena_config import ArenaConfig, RGB, Vector3
+from .arena_config import ArenaConfig, RGB, Vector3
 
 LU_TYPE_L  = 1
 LU_TYPE_L2 = 2

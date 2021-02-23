@@ -2,14 +2,11 @@ import os
 import gym
 import numpy as np
 from PIL import Image
-from gym.envs.registration import register
 
-register(id='MiniAnimalAI-v0',
-         entry_point='aai_environment:AAIEnvironment')
-
+import manimalai
 
 def capture_task(task_id):
-    env = gym.make('MiniAnimalAI-v0', width=256, height=256, task_id=task_id)
+    env = gym.make('ManimalAI-v0', width=256, height=256, task_id=task_id)
     
     action = [1,1]
     state, reward, terminal, _ = env.step(action=action)
@@ -23,7 +20,7 @@ def capture_task(task_id):
     
 
 def main():
-    config_files = os.listdir("./configurations")
+    config_files = os.listdir("./manimalai/configurations")
     config_files.sort()
 
     for file in config_files:
@@ -31,7 +28,7 @@ def main():
             task_id = file[:-4]
             print(task_id)
             capture_task(task_id)
-    
+
 
 if __name__ == '__main__':
     main()
