@@ -26,14 +26,14 @@ This example uses `pygame` library and threre is a compatibility problem with la
 
 ```
 $ pip3 install pygame==2.0.1
-$ python manual_control.py
+$ python3 manual_control.py
 ```
 
 ### Ubuntu
 
 ```
 $ pip3 install pygame==1.9.6
-$ python manual_control.py
+$ python3 manual_control.py
 ```
 
 
