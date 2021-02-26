@@ -2,8 +2,6 @@ import gym
 import gym.spaces
 import rodentia
 import os
-import math
-import random
 import numpy as np
 
 from .arena_config import ArenaConfig, RGB, Vector3
@@ -11,6 +9,32 @@ from .arena_config import ArenaConfig, RGB, Vector3
 LU_TYPE_L  = 1
 LU_TYPE_L2 = 2
 LU_TYPE_U  = 3
+
+
+class Blackout:
+    def __init__(self, pattern):
+        self.pattern = pattern
+        
+    def is_blacked_out(self, step_num):
+        if len(self.pattern) == 0:
+            return False
+        elif len(self.pattern) == 1 and self.pattern[0] < 0:
+            pattern_index = step_num // (-self.pattern[0])
+            return pattern_index % 2 == 1
+        else:
+            pattern_size = len(self.pattern)
+            pattern_index = 0
+            
+            for i in range(pattern_size-1):
+                start = self.pattern[i]
+                end   = self.pattern[i+1]
+                if start <= step_num and step_num < end:
+                    pattern_index = i + 1
+                    break
+            if step_num >= self.pattern[-1]:
+                pattern_index = len(self.pattern)
+
+            return pattern_index % 2 == 1
 
 
 class AAIEnvironment(gym.Env):
@@ -22,7 +46,7 @@ class AAIEnvironment(gym.Env):
         self.observation_space = gym.spaces.Box(
             low=0,
             high=255,
-            shape=(84,84,3)
+            shape=(height,width,3)
         )
         self.reward_range = [-np.inf, np.inf]
         
@@ -31,6 +55,8 @@ class AAIEnvironment(gym.Env):
                       "/configurations/{}.yml".format(task_id)
         config = ArenaConfig(config_path)
         self.arena = config.arenas[arena_index]
+        
+        self.blackout = Blackout(self.arena.blackouts)
         
         # Where model and texture data are located
         self.data_path = os.path.dirname(
@@ -89,9 +115,9 @@ class AAIEnvironment(gym.Env):
 
     def _convert_rot(self, rot):
         if rot is not None:
-            rot = 2.0 * math.pi * -rot / 360.0
+            rot = 2.0 * np.pi * -rot / 360.0
         else:
-            rot = np.random.rand() * 2.0 * math.pi
+            rot = np.random.rand() * 2.0 * np.pi
         return rot
         
     def _prepare_fixed_stage(self):
@@ -179,9 +205,9 @@ class AAIEnvironment(gym.Env):
         else:
             pos = [np.random.rand() * 40 - 20, 0.5, np.random.rand() * 40 - 20]
         if rot is not None:
-            rot = 2.0 * math.pi * -rot / 360.0
+            rot = 2.0 * np.pi * -rot / 360.0
         else:
-            rot = np.random.rand() * 2.0 * math.pi
+            rot = np.random.rand() * 2.0 * np.pi
         self.env.locate_agent(pos, rot_y=rot)
 
     def _locate_goal_obj(self, pos, size, rot, good, bounce, multi):
@@ -374,7 +400,9 @@ class AAIEnvironment(gym.Env):
         else:
             return None
 
-    def _reset_sub(self):
+    def reset(self):
+        self.step_num = 0 
+        
         # First clear remaining reward objects
         self._clear_objects()
         
@@ -468,10 +496,6 @@ class AAIEnvironment(gym.Env):
         screen = obs["screen"]
         return screen
 
-    def reset(self):
-        self.step_num = 0
-        return self._reset_sub()
-
     def _clear_objects(self):
         # Remove object from the environment
         for id in self.stage_obj_ids:
@@ -499,7 +523,7 @@ class AAIEnvironment(gym.Env):
         
         screen = obs["screen"]
         collided = obs["collided"]
-
+        
         # Check collision
         reward = 0
         terminal = False
@@ -525,7 +549,11 @@ class AAIEnvironment(gym.Env):
             terminal = True
             
         if terminal:
-            screen = self._reset_sub()
+            screen = self.reset()
+
+        if self.blackout.is_blacked_out(self.step_num):
+            # Black out screen
+            screen = np.zeros_like(screen)
         
         return screen, reward, terminal, {}
     
