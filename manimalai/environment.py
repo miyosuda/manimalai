@@ -38,8 +38,10 @@ class Blackout:
 
 
 class AAIEnvironment(gym.Env):
-    def __init__(self, width=256, height=256, task_id="1-1-1", arena_index=0):
+    def __init__(self, width=256, height=256, task_id="1-1-1", arena_index=0, debug=False):
         super().__init__()
+
+        self.debug = debug
 
         # Gym setting
         self.action_space = gym.spaces.MultiDiscrete((3,3))
@@ -105,6 +107,9 @@ class AAIEnvironment(gym.Env):
         else:
             return [np.random.rand() * 40 - 20, offset_y, np.random.rand() * 40 - 20]
 
+    def _convert_pos_inv(self, pos):
+        return [pos[0]+20, pos[1], -pos[2]+20]
+
     def _convert_color(self, color):
         if type(color) is RGB:
             return [color.r/255.0, color.g/255.0, color.b/255.0]
@@ -118,6 +123,12 @@ class AAIEnvironment(gym.Env):
             rot = 2.0 * np.pi * -rot / 360.0
         else:
             rot = np.random.rand() * 2.0 * np.pi
+        return rot
+
+    def _convert_rot_inv(self, rot):
+        rot = -rot * 360.0 / (2.0 * np.pi)
+        if rot < 0.0:
+            rot += 360
         return rot
         
     def _prepare_fixed_stage(self):
@@ -200,14 +211,8 @@ class AAIEnvironment(gym.Env):
             visible=False)
         
     def _locate_agent(self, pos, rot):
-        if pos is not None:
-            pos = [pos.x-20, pos.y+0.5, -pos.z+20]
-        else:
-            pos = [np.random.rand() * 40 - 20, 0.5, np.random.rand() * 40 - 20]
-        if rot is not None:
-            rot = 2.0 * np.pi * -rot / 360.0
-        else:
-            rot = np.random.rand() * 2.0 * np.pi
+        pos = self._convert_pos(pos, 0.5)
+        rot = self._convert_rot(rot)
         self.env.locate_agent(pos, rot_y=rot)
 
     def _locate_goal_obj(self, pos, size, rot, good, bounce, multi):
@@ -515,6 +520,27 @@ class AAIEnvironment(gym.Env):
         real_action[0] = (np.clip(action[0], 0, 2) - 1) * 6
         real_action[2] = np.clip(action[1], 0, 2) - 1
         return np.array(real_action, dtype=np.int32)
+
+    def _get_agent_info(self):
+        agent_info = self.env.get_agent_info()
+        
+        global_pos = agent_info["pos"]
+        global_velocity = agent_info["velocity"]
+        
+        global_rot_y = agent_info["rot_y"]
+        
+        gx =  global_velocity[0]
+        gy =  global_velocity[1]
+        gz = -global_velocity[2]
+        s = np.sin(-global_rot_y)
+        c = np.cos(-global_rot_y)
+        lx = c * gx - s * gz
+        lz = s * gx + c * gz
+        local_velociy = np.array([lx, gy, lz], dtype=np.float32)
+        
+        return local_velociy, \
+            self._convert_pos_inv(global_pos), \
+            self._convert_rot_inv(global_rot_y)
         
     def step(self, action):
         real_action = self._convert_to_real_action(action)
@@ -551,11 +577,20 @@ class AAIEnvironment(gym.Env):
         if terminal:
             screen = self.reset()
 
+        agent_local_velociy, agent_global_pos, agent_global_rot_y = self._get_agent_info()
+        
+        info = {}
+        info["local_velocity"] = agent_local_velociy
+        if self.debug:
+            # Set global position and rotation for debug purpose
+            info["global_pos"] = agent_global_pos
+            info["global_rot"] = agent_global_rot_y
+        
         if self.blackout.is_blacked_out(self.step_num):
             # Black out screen
             screen = np.zeros_like(screen)
         
-        return screen, reward, terminal, {}
+        return screen, reward, terminal, info
     
 
     def get_top_view(self):

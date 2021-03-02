@@ -1,5 +1,7 @@
 import unittest
-from manimalai.environment import Blackout
+
+from manimalai.environment import Blackout, AAIEnvironment
+from manimalai.arena_config import Vector3
 
 
 class EnvironmentTest(unittest.TestCase):
@@ -33,6 +35,30 @@ class EnvironmentTest(unittest.TestCase):
             ret = blackout1.is_blacked_out(i)
             self.assertEqual(ret, True)
             
+            
+    def test_convert_pos(self):
+        env = AAIEnvironment()
+        
+        pos = Vector3(1, 2, 3)
+        p0 = env._convert_pos(pos, offset_y=0.0)
+        p1 = env._convert_pos_inv(p0)
+
+        self.assertAlmostEqual(pos.x, p1[0])
+        self.assertAlmostEqual(pos.y, p1[1])
+        self.assertAlmostEqual(pos.z, p1[2])
+                
+        env.close()
+        
+        
+    def test_convert_rot(self):
+        env = AAIEnvironment()
+
+        r0 = env._convert_rot(358)
+        r1 = env._convert_rot_inv(r0)
+        
+        self.assertAlmostEqual(r1, 358)
+        
+        env.close()
         
 if __name__ == '__main__':
     unittest.main()

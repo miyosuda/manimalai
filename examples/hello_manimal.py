@@ -16,6 +16,6 @@ agent = RandomAgent(env.action_space)
 state = env.reset()
 for i in range(10):
     action = agent.choose_action(state)
-    state, reward, terminal, _ = env.step(action=action)
+    state, reward, terminal, info = env.step(action=action)
     pimage = Image.fromarray(state)
     pimage.save("frame{}.png".format(i))
