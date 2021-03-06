@@ -48,7 +48,7 @@ class Display(object):
     def process(self):
         action = self.get_action()
 
-        state, reward, terminal, _ = self.env.step(action=action)
+        state, reward, terminal, info = self.env.step(action=action)
 
         top_image = self.env.get_top_view()
 
